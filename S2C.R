@@ -160,9 +160,8 @@ S2sample <- function(S, dim, h, seed = NULL) {
   } else {
     stop(paste0("Dimension ", length(dim), " is not implemented."))
   }
-  SD <- sqrt(S * prod(2 * pi / h / dim))
-  sample <- Re(fft(fftshift(
-    (rnorm(prod(dim)) + 1i*rnorm(prod(dim))) * SD, dim)))
+  SD <- sqrt(2 * S * prod(pi / h / dim))
+  sample <- Re(fft((rnorm(prod(dim)) + 1i*rnorm(prod(dim))) * SD, dim))
   sample
 }
 
@@ -186,7 +185,25 @@ make_x <- function(dim, L) {
   x
 }
 
-#' Title
+#' Locations for sampling results
+#'
+#' @param dim
+#' @param L
+#'
+#' @return
+#' @export
+#'
+#' @examples
+make_x_sampling <- function(dim, L) {
+  x <- list()
+  for (d in seq_along(dim)) {
+    x[[paste0("x", d)]] <-
+      (seq_len(dim[d]) - 1) / dim[d] * L[d]
+  }
+  x
+}
+
+#' Frequencies for covariance calculations
 #'
 #' @param dim
 #' @param L
@@ -201,6 +218,25 @@ make_omega <- function(dim, L) {
   for (d in seq_along(dim)) {
     w[[paste0("w", d)]] <-
       seq(-(dim[d] / 2), dim[d] / 2 - 1, by = 1) / (dim[d] / 2) * pi / h[d]
+  }
+  w
+}
+
+#' Frequencies for sampling
+#'
+#' @param dim
+#' @param L
+#'
+#' @return
+#' @export
+#'
+#' @examples
+make_omega_sampling <- function(dim, L) {
+  h <- L / dim
+  w <- list()
+  for (d in seq_along(dim)) {
+    w[[paste0("w", d)]] <-
+      seq(0, dim[d] - 1, by = 1) / dim[d] * pi / h[d]
   }
   w
 }

@@ -346,7 +346,15 @@ S_df %>% group_by(Type) %>% summarise(N = sum(Value > 0))
 
 ## Sampling example
 
+Code for the corrected method! Text above not yet corrected.
+
 ```{r}
+x_ <- make_x_sampling(n, L)
+omega_ <- make_omega_sampling(n, L)
+omega <- as.matrix(expand.grid(omega_))
+S_truncated <- S_fun(omega = omega)
+S_folded <- fold_spectrum(omega = omega, S_fun = S_fun, h)
+S_folded_cell <- fold_spectrum(omega = omega, S_fun = S_fun, h, pointwise = FALSE)
 samples_df <-
     cbind(
       as.data.frame(as.matrix(expand.grid(x_))),
@@ -362,12 +370,10 @@ samples_df <-
       )
 ```
 
-Plot only half, since that's likely the correct interpretation.
-Need to do some math checking, and to see if this can be improved...
 ```{r}
 ggplot(samples_df, aes(x1, Value)) +
   geom_line(aes(col = Type)) +
-  coord_cartesian(xlim = c(0, L/2)) +
+  coord_cartesian(xlim = c(0, L)) +
   xlab("x") + ylab("Sample")
 ```
 (for long correlation range, the three version are superimposed, since they used the same random seed, and the spectra are almost identical even after folding/truncation)
