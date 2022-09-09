@@ -139,17 +139,22 @@ S2C <- function(S, dim, h) {
   C * prod(2 * pi / h / dim)
 }
 
-#' Title
+#' Spectral sampling
 #'
-#' @param S
-#' @param dim
-#' @param h
+#' @param S Evaluated spectrum
+#' @param dim Number of frequency space integration points for each dimension
+#' @param h Spatial step sizes
+#' @param seed The random seed
+#' @param conjugate If `TRUE`, use the complex conjugate property of the
+#'   spectral process to generate a single realisation. If `FALSE`, the
+#'   real and imaginary parts will be two independent realisations
 #'
 #' @return
 #' @export
 #'
 #' @examples
-S2sample <- function(S, dim, h, seed = NULL) {
+
+S2sample <- function(S, dim, h, seed = NULL, conjugate = FALSE) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
@@ -160,8 +165,58 @@ S2sample <- function(S, dim, h, seed = NULL) {
   } else {
     stop(paste0("Dimension ", length(dim), " is not implemented."))
   }
-  SD <- sqrt(2 * S * prod(pi / h / dim))
-  sample <- Re(fft((rnorm(prod(dim)) + 1i*rnorm(prod(dim))) * SD, dim))
+  SD <- sqrt(S * prod(2 * pi / h / dim))
+  z <- (rnorm(prod(dim)) + 1i*rnorm(prod(dim))) * SD
+  if (conjugate) {
+    k <- expand.grid(lapply(dim, function(d) seq_len(d) - 1 - d/2))
+    # Find symmetry pairs and make them complex conjugate
+    if (length(dim) == 1) {
+      # Note: this can be implemented much more efficiently...
+      pair <- rep(NA_integer_, nrow(k))
+      for (idx in seq_len(nrow(k))) {
+        pair_ <- k[idx,1] == -k[,1]
+        if (any(pair_)) {
+          pair[idx] <- which(pair_)
+        }
+      }
+      idx_ <- (k[,1] < 0) & !is.na(pair)
+      z[idx_] <- Re(z[pair[idx_]]) - 1i * Im(z[pair[idx_]])
+      idx_ <- (k[,1] == 0) | is.na(pair)
+      z[idx_] <- Re(z[idx_])
+    } else { # length(dim) == 2
+      # Note: this can be implemented much more efficiently...
+      pair <- rep(NA_integer_, nrow(k))
+      for (idx in seq_len(nrow(k))) {
+        pair_ <- (k[idx,1] == -k[,1]) & (k[idx,2] == -k[,2])
+        if (any(pair_)) {
+          pair[idx] <- which(pair_)
+        }
+      }
+      idx_ <- (k[,1] < 0) & !is.na(pair)
+      z[idx_] <- Re(z[pair[idx_]]) - 1i * Im(z[pair[idx_]])
+      idx_ <- (k[,1] == 0) & (k[,2] < 0) & !is.na(pair)
+      z[idx_] <- Re(z[pair[idx_]]) - 1i * Im(z[pair[idx_]])
+      idx_ <- ((k[,1] == 0) & (k[,2] == 0)) | is.na(pair)
+      z[idx_] <- Re(z[idx_])
+    }
+  } else { # !conjugate
+    k <- expand.grid(lapply(dim, function(d) seq_len(d) - 1 - d/2))
+    # Find lower edges and set to zero
+    if (length(dim) == 1) {
+      edge <- k[,1] == -dim[1]/2
+      z[edge] <- 0
+    } else { # length(dim) == 2
+      edge <- (k[,1] == -dim[1]/2) | (k[,2] == -dim[2]/2)
+      z[edge] <- 0
+    }
+  }
+
+  z <- fftshift(z, dim)
+  if (length(dim) == 1) {
+    sample <- (fft(z, dim))
+  } else {
+    sample <- (fft(matrix(z, dim[1], dim[2])))
+  }
   sample
 }
 
@@ -187,14 +242,15 @@ make_x <- function(dim, L) {
 
 #' Locations for sampling results
 #'
-#' @param dim
-#' @param L
+#' @param dim Number of spectral integration points, for each dimension
+#' @param h The spatial step lengths, for each dimension
 #'
 #' @return
 #' @export
 #'
 #' @examples
-make_x_sampling <- function(dim, L) {
+make_x_sampling <- function(dim, h) {
+  L <- dim * h
   x <- list()
   for (d in seq_along(dim)) {
     x[[paste0("x", d)]] <-
@@ -224,19 +280,18 @@ make_omega <- function(dim, L) {
 
 #' Frequencies for sampling
 #'
-#' @param dim
-#' @param L
+#' @param dim Number of spectral integration points, for each dimension
+#' @param h The spatial step lengths, for each dimension
 #'
 #' @return
 #' @export
 #'
 #' @examples
-make_omega_sampling <- function(dim, L) {
-  h <- L / dim
+make_omega_sampling <- function(dim, h) {
   w <- list()
   for (d in seq_along(dim)) {
     w[[paste0("w", d)]] <-
-      seq(0, dim[d] - 1, by = 1) / dim[d] * pi / h[d]
+      seq(-(dim[d] / 2), dim[d] / 2 - 1, by = 1) / (dim[d] / 2) * pi / h[d]
   }
   w
 }

@@ -1,7 +1,7 @@
 ---
 title: "Spectral representation and discretisation"
 author: "Finn Lindgren"
-date: "September 2021, with major updates May 2022"
+date: "September 2021, with major updates May/June 2022"
 output:
   pdf_document: default
   html_document: default
@@ -18,6 +18,7 @@ header-includes:
   - \newcommand{\wh}[1]{\widehat{#1}}
   - \newcommand{\mc}[1]{\mathcal{#1}}
   - \newcommand{\pN}{\textsf{N}}
+  - \newcommand{\pCov}{\textsf{Cov}}
 editor_options:
   chunk_output_type: console
 ---
@@ -180,18 +181,82 @@ symmetry is ignored, the result of the (inverse) Fourier transform gives
 a sample from the process as its real part, and a corresponding sample from the
 process _envelope_ as the norms of the absolute values.
 
+We here present a similar method that is easier to show gives the correct result.
+Let $(\bm{\omega}_{\bm{k}})_l=\frac{2 \pi k_l}{h_l n_l}$ for $k_l=-n_l/2,1,\dots,n_l/2-1$.
+Define
+$$
+\sigma_{\bm{k}}^2 = \wt{S}(\bm{\omega}_{\bm{k}}) \prod_{l=1}^d\frac{2\pi}{h_l n_l},
+\quad \bm{k}\in\mc{K}_0,
+$$
+
 Let $\wh{z}_{\bm{k}}$ be iid complex valued $\pN(0,1)$ random variables, and let
 $$
-\wh{x}_{\bm{k} \bmod \bm{n}}=
+\wh{x}_{\bm{k}} =
 \wh{z}_{\bm{k}} \sigma_{\bm{k}},
 \quad \bm{k}\in\mc{K}_0 .
 $$
-Then $x(\bm{j}\odot\bm{h})=\Re[x_{\bm{j}}]$ is an approximate sample from the process model,
-and $|x_{\bm{j}}|$ is the corresponding sample of the process envelope, for
-$\bm{j}\in\mc{K}_+$.
+Then the real part of the Fourier transformed values, $x(\bm{j}\odot\bm{h})=\Re[x_{\bm{j}}]$ form an approximate sample from the process model, $\bm{j}\in\mc{K}_+$.
 
-Check: is there a hidden cyclic boundary condition built in to this method? If so,
-is the first half of the process correct?
+[and $|x_{\bm{j}}|$ is the corresponding sample of the process envelope, for
+$\bm{j}\in\mc{K}_+$.]
+
+#### Proof
+
+Let $a_{\bm{k}}$ and $a_{\bm{k}}$ be the real and imaginary parts of $\wh{z}_{\bm{k}}$.
+Define
+$c_{\bm{k}\cdot\bm{j}}=\cos(\bm{\omega}_{\bm{k}}\cdot\bm{j} \odot \bm{h})$ and
+$s_{\bm{k}\cdot\bm{j}}=\sin(\bm{\omega}_{\bm{k}}\cdot\bm{j} \odot \bm{h})$.
+Then
+$$
+\begin{aligned}
+x_{\bm{j}} &=
+\sum_{\bm{k}\in\mc{K}_0}
+\exp(i\bm{\omega}_{\bm{k}}\cdot\bm{j} \odot \bm{h}) (a_{\bm{k}} + i b_{\bm{k}})\sigma_{\bm{k}}
+\\&=
+\sum_{\bm{k}\in\mc{K}_0}
+(c_{\bm{k}\cdot\bm{j}} + i s_{\bm{k}\cdot\bm{j}}) (a_{\bm{k}} + i b_{\bm{k}})\sigma_{\bm{k}}
+\\&=
+\sum_{\bm{k}\in\mc{K}_0}
+(c_{\bm{k}\cdot\bm{j}} a_{\bm{k}} - s_{\bm{k}\cdot\bm{j}} b_{\bm{k}})\sigma_{\bm{k}}
++
+i \sum_{\bm{k}\in\mc{K}_0}
+(c_{\bm{k}\cdot\bm{j}} b_{\bm{k}} + s_{\bm{k}\cdot\bm{j}} a_{\bm{k}})\sigma_{\bm{k}} .
+\end{aligned}
+$$
+The covariance for the real part is given by
+$$
+\begin{aligned}
+\pCov[\Re(x_{\bm{j}}),\Re(x_{\bm{j}'})] &=
+\sum_{\bm{k}\in\mc{K}_0}
+\pCov[
+(c_{\bm{k}\cdot\bm{j}} a_{\bm{k}} - s_{\bm{k}\cdot\bm{j}} b_{\bm{k}})\sigma_{\bm{k}},
+(c_{\bm{k}\cdot\bm{j}'} a_{\bm{k}} - s_{\bm{k}\cdot\bm{j}'} b_{\bm{k}})\sigma_{\bm{k}}]
+\\&=
+\sum_{\bm{k}\in\mc{K}_0}
+(c_{\bm{k}\cdot\bm{j}}c_{\bm{k}\cdot\bm{j}'} + s_{\bm{k}\cdot\bm{j}}s_{\bm{k}\cdot\bm{j}'})\sigma_{\bm{k}}^2
+\\&=
+\sum_{\bm{k}\in\mc{K}_0}
+c_{\bm{k}\cdot(\bm{j}'-\bm{j})} \sigma_{\bm{k}}^2 .
+\end{aligned}
+$$
+where the last step follows from the trigonometric identity for the cosine of the difference between two angles.
+By considering the definition of $\sigma_{\bm{k}}^2$, we see that the resulting sum is a Riemann sum approximation of the cosine integral
+$$
+\begin{aligned}
+\int_{\prod_{l=0}^d [-\pi/h_l,\pi/h_l)} &\cos(\bm{\omega}\cdot (\bm{j}'-\bm{j}) \odot\bm{h}) \wt{S}(\bm{\omega}) \mathrm{d}\bm{\omega}
+=
+\int_{\prod_{l=0}^d [-\pi/h_l,\pi/h_l)} \cos(\bm{\omega}\cdot(\bm{j}'-\bm{j}) \odot\bm{h}) \wt{S}(\bm{\omega})
+\mathrm{d}\bm{\omega}
+\\&=
+\int_{\prod_{l=0}^d [-\pi/h_l,\pi/h_l)} \exp(i\bm{\omega}\cdot(\bm{j}'-\bm{j}) \odot\bm{h}) \wt{S}(\bm{\omega}) \mathrm{d}\bm{\omega}
+\end{aligned}
+$$
+where in the final step, the integral of the $\sin(i\bm{\omega}\cdot(\bm{j}'-\bm{j}) \odot\bm{h})$ term from $\exp()$ vanishes due to symmetry.
+This shows that we have the spectral representation of the covariance function, $R[\bm{h}\odot(\bm{j}'-\bm{j})]$, for the given grid resolution (with $\wt{S}$ incorporating the required spectral folding, etc).
+
+Note: The imaginary part of $x_{\bm{j}}$ leads to the same covariance calculations as the real part. However,
+the cross-covariance between the real imaginary parts is non-zero, so the real and imaginary parts of the sample are not independent. This is because even though the $s_{\bm{k}\cdot(\bm{j}'-\bm{j})}$ terms cancel out pairwise for $\bm{k}$ and $-\bm{k}$, the indices where one or more $k_l=-n_l/2$ have no corresponding $k_l=n_l/2$ in $\mc{K}_0$.
+Thus, in order to generate two independent samples in a single complex FFT evaluation, one needs to set such "lower boundary" $\sigma_{\bm{k}}$ values to zero. This slightly reduces the accuracy of the sampling, but since it lowers the computational cost by a factor 2, and only affects frequencies that typically have small contribution, this may be a preferable approach in practice.
 
 ### A note on resolution
 
@@ -203,7 +268,7 @@ we are constrained by the desired space resolution $\bm{h}$, but we are
  the covariance or simulation at a small number of spatial points, we still need
  to use enough discretisation points to obtain an accurate Fourier integral approximation.
  In practice, this means that we might only use a small portion of the computed results.
-
+ 
 
 ## Transformation code
 
@@ -283,11 +348,22 @@ S_df %>% group_by(Type) %>% summarise(N = sum(Value > 0))
 ## 1D example
 
 ```{r}
+#S_fun <- function(omega) {
+#  rho <- 2
+#  exp(-rowSums(omega^2) * rho^2 / 2) / sqrt(2 * pi) * rho
+#}
 S_fun <- function(omega) {
-  rho <- 2
-  exp(-rowSums(omega^2) / rho^2 / 2) / sqrt(2 * pi) / rho
+  nu <- 1.5
+  rho <- 3 / sqrt(8 * nu)
+  v <- rho^(2 * nu) * gamma(nu) / gamma(nu + 0.5) / sqrt(4 * pi)
+  rho^(2 * nu + 1) / (2 * pi) /
+    (1 + rowSums(omega^2) * rho^2)^(nu + 0.5)
 }
-n <- c(256)
+#S_fun <- function(omega) {
+#  rho <- 0.1
+#  1/(1-0.9*2*(rowSums(omega^2) * rho^2)^2+(rowSums(omega^2) * rho^2)^4)^2
+#}
+n <- c(512)
 L <- c(20)
 h <- L / n
 x_ <- make_x(n, L)
@@ -346,11 +422,10 @@ S_df %>% group_by(Type) %>% summarise(N = sum(Value > 0))
 
 ## Sampling example
 
-Code for the corrected method! Text above not yet corrected.
-
 ```{r}
-x_ <- make_x_sampling(n, L)
-omega_ <- make_omega_sampling(n, L)
+n_sampling <- n * 2
+x_ <- make_x_sampling(n_sampling, h)
+omega_ <- make_omega_sampling(n_sampling, h)
 omega <- as.matrix(expand.grid(omega_))
 S_truncated <- S_fun(omega = omega)
 S_folded <- fold_spectrum(omega = omega, S_fun = S_fun, h)
@@ -359,9 +434,9 @@ samples_df <-
     cbind(
       as.data.frame(as.matrix(expand.grid(x_))),
       data.frame(
-        Truncated = as.vector(S2sample(S_truncated, n, h, seed = 123L)),
-        Folded = as.vector(S2sample(S_folded, n, h, seed = 123L)),
-        "Folded_cell" = as.vector(S2sample(S_folded_cell, n, h, seed = 123L))
+        Truncated = as.vector(S2sample(S_truncated, n_sampling, h, seed = 123L)),
+        Folded = as.vector(S2sample(S_folded, n_sampling, h, seed = 123L)),
+        "Folded_cell" = as.vector(S2sample(S_folded_cell, n_sampling, h, seed = 123L))
       )
     ) %>%
       pivot_longer(
@@ -371,17 +446,15 @@ samples_df <-
 ```
 
 ```{r}
-ggplot(samples_df, aes(x1, Value)) +
-  geom_line(aes(col = Type)) +
+ggplot(samples_df %>% filter(x1 < L), aes(x1)) +
+  geom_line(aes(y = Re(Value), col = Type, lty="Real part")) +
+  geom_line(aes(y = Im(Value), col = Type, lty="Imag part")) +
   coord_cartesian(xlim = c(0, L)) +
   xlab("x") + ylab("Sample")
 ```
-(for long correlation range, the three version are superimposed, since they used the same random seed, and the spectra are almost identical even after folding/truncation)
+(for long correlation range, the three versions are superimposed, since they used the same random seed, and the spectra are almost identical even after folding/truncation)
 
 ## References
 
-Note: the theory discussed above follows from the materials found in, among many other places @LindgrenStocProc, ..., and @Cramer1967. The materials in the first two books are later revisions of older teaching materials, and the third is a reprint of the 1967 original:
+Note: the theory discussed above follows from the materials found in, among many other places, @Cramer1967 @LindgrenStocProc, and @LindgrenEtAlStocProc. The materials two latter books are later revisions of older teaching materials, and the first is a reprint of the 1967 original.
 
-* Georg Lindgren, Holger Rootzen, Maria Sandsten (2013),
-  _Stationary Stochastic Processes for Scientists and Engineers_.
-  Chapman and Hall
