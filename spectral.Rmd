@@ -30,9 +30,16 @@ suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(patchwork))
 ```
 
-## Continuous domains and finite dimensional representations via Fourier theory
+The theory discussed in this note follows from the materials found in, among many other places, @Cramer1967, @LindgrenStocProc (available online via the university library), and @LindgrenEtAlStocProc. The materials in the two latter books are later revisions of older teaching materials, and the first is a reprint of the 1967 original.
 
-When the correctly folded spectral density for the discrete space process is used, the approximation in the direct spectral representation comes from the frequency resolution, not from frequency truncation.
+Key observation:
+When the correctly folded spectral density for the spatially discretised process is used, the approximation in the direct spectral representation comes from the frequency *resolution*, not from frequency *truncation*.
+
+Other approximate spectral techniques include the "turning bands" method, that relies
+on Monte Carlo integration of the Fourier integrals instead of lattice FFT computations.
+
+
+## Continuous domains and finite dimensional representations via Fourier theory
 
 The exact spectral representation of the covariance evaluated on a discrete (infinite) lattice is easily derived from the continuous domain representation
 $$
@@ -456,5 +463,4 @@ ggplot(samples_df %>% filter(x1 < L), aes(x1)) +
 
 ## References
 
-Note: the theory discussed above follows from the materials found in, among many other places, @Cramer1967 @LindgrenStocProc, and @LindgrenEtAlStocProc. The materials two latter books are later revisions of older teaching materials, and the first is a reprint of the 1967 original.
 
